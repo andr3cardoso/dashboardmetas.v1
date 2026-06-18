@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard de Metas — Analista de Dados</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ─── Reset & Base ──────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: 'Inter', sans-serif; }
+
+/* ─── CSS Variables ─────────────────────────────────────────── */
+:root {
+  --bg:          #f0f2f5;
+  --surface:     #ffffff;
+  --surface2:    #f8f9fb;
+  --border:      #e2e6ed;
+  --border2:     #cdd3de;
+  --text:        #111827;
+  --text2:       #4b5563;
+  --text3:       #9ca3af;
+  --sidebar-bg:  #0f1623;
+  --sidebar-txt: #c8d0e0;
+  --sidebar-act: #ffffff;
+  --sidebar-acc: #3b82f6;
+  --accent:      #3b82f6;
+  --accent2:     #1d4ed8;
+  --green:       #10b981;
+  --green-bg:    #d1fae5;
+  --red:         #ef4444;
+  --red-bg:      #fee2e2;
+  --amber:       #f59e0b;
+  --amber-bg:    #fef3c7;
+  --purple:      #8b5cf6;
+  --purple-bg:   #ede9fe;
+  --radius:      8px;
+  --radius-lg:   12px;
+  --shadow:      0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-lg:   0 4px 16px rgba(0,0,0,.10);
+  --mono:        'IBM Plex Mono', monospace;
+}
+
+/* ─── LOGIN PAGE ────────────────────────────────────────────── */
+#login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f1623 0%, #1a2540 50%, #0f1623 100%);
+  position: relative;
+  overflow: hidden;
+}
+#login-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 30% 50%, rgba(59,130,246,.12) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 20%, rgba(139,92,246,.08) 0%, transparent 50%);
+  pointer-events: none;
+}
+.login-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 48px 40px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.4);
+  position: relative;
+  z-index: 1;
+}
+.login-brand {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.login-brand .brand-icon {
+  width: 56px; height: 56px;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px;
+  font-size: 24px;
+}
+.login-brand h1 {
+  font-size: 22px; font-weight: 700; color: #111827;
+  margin-bottom: 4px;
+}
+.login-brand p {
+  font-size: 13px; color: #6b7280;
+}
+.login-field { margin-bottom: 20px; }
+.login-field label {
+  display: block; font-size: 13px; font-weight: 500;
+  color: #374151; margin-bottom: 6px;
+}
+.login-field input {
+  width: 100%; padding: 11px 14px;
+  border: 1.5px solid #e5e7eb; border-radius: 8px;
+  font-size: 14px; font-family: inherit; color: #111827;
+  transition: border-color .15s, box-shadow .15s;
+  outline: none;
+}
+.login-field input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+}
+.login-btn {
+  width: 100%; padding: 12px;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white; border: none; border-radius: 8px;
+  font-size: 15px; font-weight: 600; font-family: inherit;
+  cursor: pointer; transition: opacity .15s, transform .1s;
+  margin-top: 8px;
+}
+.login-btn:hover { opacity: .92; transform: translateY(-1px); }
+.login-btn:active { transform: translateY(0); }
+.login-error {
+  margin-top: 12px; padding: 10px 14px;
+  background: #fee2e2; color: #dc2626;
+  border-radius: 8px; font-size: 13px; font-weight: 500;
+  display: none; text-align: center;
+}
+.login-footer {
+  text-align: center; margin-top: 24px;
+  font-size: 11px; color: #9ca3af;
+}
+
+/* ─── APP SHELL ─────────────────────────────────────────────── */
+#app {
+  display: none;
+  height: 100vh;
+  flex-direction: row;
+}
+
+/* ─── SIDEBAR ───────────────────────────────────────────────── */
+.sidebar {
+  width: 240px; min-width: 240px;
+  background: var(--sidebar-bg);
+  display: flex; flex-direction: column;
+  height: 100vh; overflow-y: auto;
+  position: sticky; top: 0;
+  z-index: 100;
+}
+.sidebar-header {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+.sidebar-brand {
+  display: flex; align-items: center; gap: 12px;
+}
+.sidebar-brand .brand-dot {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.sidebar-brand-text h2 {
+  font-size: 14px; font-weight: 700; color: #fff;
+  line-height: 1.2;
+}
+.sidebar-brand-text p {
+  font-size: 10px; color: rgba(255,255,255,.4);
+  text-transform: uppercase; letter-spacing: .06em;
+  margin-top: 2px;
+}
+.sidebar-nav {
+  padding: 16px 12px;
+  flex: 1;
+}
+.nav-section-label {
+  font-size: 10px; font-weight: 600; color: rgba(255,255,255,.25);
+  text-transform: uppercase; letter-spacing: .1em;
+  padding: 0 8px; margin: 16px 0 6px;
+}
+.nav-section-label:first-child { margin-top: 0; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: 8px;
+  color: var(--sidebar-txt); font-size: 13.5px; font-weight: 500;
+  cursor: pointer; transition: background .15s, color .15s;
+  margin-bottom: 2px; text-decoration: none;
+  user-select: none;
+}
+.nav-item .nav-icon {
+  font-size: 16px; width: 20px; text-align: center; flex-shrink: 0;
+}
+.nav-item:hover { background: rgba(255,255,255,.07); color: #fff; }
+.nav-item.active {
+  background: rgba(59,130,246,.2); color: var(--sidebar-act);
+}
+.nav-item.active .nav-icon { color: #60a5fa; }
+.nav-badge {
+  margin-left: auto; background: #3b82f6; color: #fff;
+  font-size: 10px; font-weight: 700; padding: 2px 7px;
+  border-radius: 20px;
+}
+.nav-badge.green { background: #10b981; }
+.sidebar-footer {
+  padding: 16px 12px 20px;
+  border-top: 1px solid rgba(255,255,255,.07);
+}
+.user-chip {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 8px;
+  background: rgba(255,255,255,.05);
+}
+.user-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.user-info { flex: 1; min-width: 0; }
+.user-info .user-name { font-size: 13px; font-weight: 600; color: #fff; }
+.user-info .user-role { font-size: 11px; color: rgba(255,255,255,.4); }
+.logout-btn {
+  background: none; border: none; color: rgba(255,255,255,.3);
+  cursor: pointer; font-size: 16px; padding: 4px;
+  transition: color .15s; border-radius: 4px;
+}
+.logout-btn:hover { color: var(--red); }
+
+/* ─── MAIN CONTENT ──────────────────────────────────────────── */
+.main-content {
+  flex: 1; overflow-y: auto;
+  background: var(--bg);
+}
+
+/* ─── PAGE HEADER ───────────────────────────────────────────── */
+.page-header {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 20px 32px; display: flex; align-items: center;
+  justify-content: space-between; position: sticky; top: 0; z-index: 10;
+}
+.page-header h1 { font-size: 20px; font-weight: 700; color: var(--text); }
+.page-header p { font-size: 13px; color: var(--text2); margin-top: 2px; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.header-badge {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 20px;
+  font-size: 12px; color: var(--text2);
+}
+.header-badge .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--green); animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity: 1; } 50% { opacity: .4; }
+}
+
+/* ─── PAGE SECTIONS ─────────────────────────────────────────── */
+.page-section { display: none; }
+.page-section.active { display: block; }
+.section-body { padding: 32px; }
+
+/* ─── HOME PAGE ─────────────────────────────────────────────── */
+.welcome-hero {
+  background: linear-gradient(135deg, #0f1623 0%, #1a2540 100%);
+  border-radius: 16px; padding: 48px 40px;
+  margin-bottom: 28px; position: relative; overflow: hidden;
+}
+.welcome-hero::before {
+  content: '';
+  position: absolute;
+  right: -60px; top: -60px;
+  width: 280px; height: 280px;
+  background: radial-gradient(circle, rgba(59,130,246,.15) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.welcome-hero::after {
+  content: '';
+  position: absolute;
+  left: 40%; bottom: -40px;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(139,92,246,.1) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.welcome-hero h2 {
+  font-size: 28px; font-weight: 800; color: #fff;
+  margin-bottom: 8px; position: relative; z-index: 1;
+}
+.welcome-hero p {
+  font-size: 15px; color: rgba(255,255,255,.6);
+  max-width: 560px; line-height: 1.6; position: relative; z-index: 1;
+}
+.welcome-hero .hero-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(59,130,246,.2); color: #60a5fa;
+  border: 1px solid rgba(59,130,246,.3);
+  padding: 5px 12px; border-radius: 20px;
+  font-size: 12px; font-weight: 500; margin-bottom: 16px;
+  position: relative; z-index: 1;
+}
+.info-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+.info-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 24px;
+  transition: box-shadow .15s;
+}
+.info-card:hover { box-shadow: var(--shadow-lg); }
+.info-card .ic-icon {
+  width: 44px; height: 44px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; margin-bottom: 16px;
+}
+.info-card .ic-icon.blue { background: #dbeafe; }
+.info-card .ic-icon.green { background: #d1fae5; }
+.info-card .ic-icon.purple { background: #ede9fe; }
+.info-card h3 { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.info-card p { font-size: 13px; color: var(--text2); line-height: 1.6; }
+
+/* ─── UPLOAD PAGE ───────────────────────────────────────────── */
+.upload-container { max-width: 680px; }
+.upload-zone {
+  border: 2px dashed var(--border2);
+  border-radius: 16px; padding: 56px 32px;
+  text-align: center; background: var(--surface);
+  transition: border-color .15s, background .15s;
+  cursor: pointer;
+}
+.upload-zone.drag-over {
+  border-color: var(--accent); background: rgba(59,130,246,.04);
+}
+.upload-icon { font-size: 48px; margin-bottom: 16px; }
+.upload-zone h3 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+.upload-zone p { font-size: 14px; color: var(--text2); margin-bottom: 24px; }
+.upload-zone input[type=file] { display: none; }
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 11px 24px; background: var(--accent);
+  color: #fff; border: none; border-radius: 8px;
+  font-size: 14px; font-weight: 600; font-family: inherit;
+  cursor: pointer; transition: background .15s, transform .1s;
+}
+.btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+.btn-secondary {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 20px; background: var(--surface);
+  color: var(--text); border: 1.5px solid var(--border2);
+  border-radius: 8px; font-size: 13px; font-weight: 500;
+  font-family: inherit; cursor: pointer; transition: all .15s;
+}
+.btn-secondary:hover { background: var(--surface2); border-color: var(--accent); color: var(--accent); }
+.upload-guide {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 24px; margin-top: 20px;
+}
+.upload-guide h4 { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 14px; }
+.col-table { width: 100%; border-collapse: collapse; }
+.col-table th, .col-table td {
+  padding: 8px 12px; text-align: left;
+  font-size: 12.5px; border-bottom: 1px solid var(--border);
+}
+.col-table th { font-weight: 600; color: var(--text2); background: var(--surface2); }
+.col-table td { color: var(--text); }
+.col-table td:first-child { font-family: var(--mono); color: var(--accent); font-size: 12px; }
+.upload-status {
+  margin-top: 16px; padding: 14px 18px;
+  border-radius: 10px; font-size: 13px; font-weight: 500;
+  display: none; align-items: center; gap: 10px;
+}
+.upload-status.success { background: var(--green-bg); color: #065f46; display: flex; }
+.upload-status.error   { background: var(--red-bg);   color: #991b1b; display: flex; }
+.upload-status.loading { background: #dbeafe; color: #1e40af; display: flex; }
+
+/* ─── DASHBOARD ─────────────────────────────────────────────── */
+.dash-no-data {
+  text-align: center; padding: 80px 20px;
+  color: var(--text2);
+}
+.dash-no-data .no-data-icon { font-size: 56px; margin-bottom: 16px; }
+.dash-no-data h3 { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.dash-no-data p { font-size: 14px; line-height: 1.6; }
+.btn-link {
+  background: none; border: none; color: var(--accent);
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  font-family: inherit; text-decoration: underline;
+  padding: 0; margin-top: 16px; display: inline-block;
+}
+
+/* KPI cards */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 16px; margin-bottom: 28px;
+}
+.kpi-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 22px 20px;
+  position: relative; overflow: hidden;
+  transition: box-shadow .15s, transform .1s;
+}
+.kpi-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+.kpi-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+}
+.kpi-card.blue::before   { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+.kpi-card.green::before  { background: linear-gradient(90deg, #10b981, #34d399); }
+.kpi-card.amber::before  { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.kpi-card.red::before    { background: linear-gradient(90deg, #ef4444, #f87171); }
+.kpi-card.purple::before { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+.kpi-label {
+  font-size: 11px; font-weight: 600; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .07em; margin-bottom: 10px;
+}
+.kpi-value {
+  font-size: 28px; font-weight: 800; color: var(--text);
+  line-height: 1; margin-bottom: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.kpi-sub {
+  font-size: 12px; color: var(--text2);
+  display: flex; align-items: center; gap: 4px;
+}
+.kpi-delta {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 12px; font-weight: 600; padding: 2px 7px;
+  border-radius: 20px; margin-left: 6px;
+}
+.kpi-delta.up   { background: var(--green-bg); color: #065f46; }
+.kpi-delta.down { background: var(--red-bg);   color: #991b1b; }
+
+/* Charts grid */
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px; margin-bottom: 28px;
+}
+.charts-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+.chart-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 24px;
+}
+.chart-card.full { grid-column: 1 / -1; }
+.chart-title {
+  font-size: 14px; font-weight: 700; color: var(--text);
+  margin-bottom: 4px;
+}
+.chart-sub {
+  font-size: 12px; color: var(--text2); margin-bottom: 20px;
+}
+.chart-wrap { position: relative; }
+
+/* Table */
+.table-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); margin-bottom: 28px; overflow: hidden;
+}
+.table-header {
+  padding: 20px 24px; display: flex;
+  align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+.table-header h3 { font-size: 15px; font-weight: 700; color: var(--text); }
+.table-header p  { font-size: 12px; color: var(--text2); }
+.table-controls { display: flex; align-items: center; gap: 10px; }
+.search-input {
+  padding: 7px 12px; border: 1.5px solid var(--border);
+  border-radius: 8px; font-size: 13px; font-family: inherit;
+  color: var(--text); background: var(--surface2);
+  outline: none; transition: border-color .15s;
+  width: 220px;
+}
+.search-input:focus { border-color: var(--accent); }
+.filter-select {
+  padding: 7px 12px; border: 1.5px solid var(--border);
+  border-radius: 8px; font-size: 13px; font-family: inherit;
+  color: var(--text); background: var(--surface2);
+  outline: none; cursor: pointer;
+}
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  padding: 11px 16px; text-align: left;
+  font-size: 11px; font-weight: 700; color: var(--text2);
+  text-transform: uppercase; letter-spacing: .06em;
+  background: var(--surface2); border-bottom: 1px solid var(--border);
+  white-space: nowrap; cursor: pointer; user-select: none;
+}
+.data-table th:hover { color: var(--accent); }
+.data-table th .sort-icon { margin-left: 4px; opacity: .4; }
+.data-table td {
+  padding: 10px 16px; font-size: 13px; color: var(--text);
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: var(--surface2); }
+.status-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 600; white-space: nowrap;
+}
+.status-pill.green  { background: var(--green-bg);  color: #065f46; }
+.status-pill.red    { background: var(--red-bg);    color: #991b1b; }
+.status-pill.amber  { background: var(--amber-bg);  color: #92400e; }
+.status-pill.blue   { background: #dbeafe;           color: #1e40af; }
+.status-pill.gray   { background: #f3f4f6;           color: #6b7280; }
+.progress-bar-bg {
+  height: 6px; background: var(--border);
+  border-radius: 3px; overflow: hidden; width: 80px;
+}
+.progress-bar-fill {
+  height: 100%; border-radius: 3px;
+  transition: width .3s;
+}
+.pct-text { font-size: 12px; font-weight: 600; font-family: var(--mono); margin-left: 8px; }
+.table-pagination {
+  padding: 14px 24px; display: flex; align-items: center;
+  justify-content: space-between; border-top: 1px solid var(--border);
+  font-size: 13px; color: var(--text2);
+}
+.pagination-btns { display: flex; gap: 6px; }
+.page-btn {
+  width: 32px; height: 32px; border-radius: 6px;
+  border: 1.5px solid var(--border); background: var(--surface);
+  color: var(--text); font-size: 13px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.page-btn:hover   { border-color: var(--accent); color: var(--accent); }
+.page-btn.active  { background: var(--accent); border-color: var(--accent); color: #fff; }
+.page-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+/* Canal breakdown */
+.canal-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 12px;
+  margin-bottom: 28px;
+}
+.canal-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px;
+}
+.canal-name { font-size: 11px; font-weight: 700; color: var(--text2);
+  text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+.canal-value { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+.canal-sub { font-size: 11px; color: var(--text2); }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+/* month tabs */
+.month-tabs {
+  display: flex; gap: 8px; margin-bottom: 24px;
+  padding: 4px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 10px;
+  width: fit-content;
+}
+.month-tab {
+  padding: 7px 20px; border-radius: 7px;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  color: var(--text2); border: none; background: none;
+  font-family: inherit; transition: all .15s;
+}
+.month-tab.active {
+  background: var(--sidebar-bg); color: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,.15);
+}
+
+/* top performers */
+.performers-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px;
+}
+.performer-list { list-style: none; }
+.performer-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.performer-item:last-child { border-bottom: none; }
+.performer-rank {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--surface2); display: flex; align-items: center;
+  justify-content: center; font-size: 11px; font-weight: 700;
+  color: var(--text2); flex-shrink: 0;
+}
+.performer-rank.gold   { background: #fef3c7; color: #92400e; }
+.performer-rank.silver { background: #f3f4f6; color: #4b5563; }
+.performer-rank.bronze { background: #fde8d0; color: #92400e; }
+.performer-info { flex: 1; min-width: 0; }
+.performer-name {
+  font-size: 13px; font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.performer-canal { font-size: 11px; color: var(--text2); }
+.performer-value { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--text); }
+
+/* responsive */
+@media (max-width: 900px) {
+  .sidebar { width: 200px; min-width: 200px; }
+  .charts-grid { grid-template-columns: 1fr; }
+  .performers-grid { grid-template-columns: 1fr; }
+  .info-grid { grid-template-columns: 1fr; }
+  .kpi-grid { grid-template-columns: repeat(2,1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     LOGIN
+══════════════════════════════════════════════════════════════ -->
+<div id="login-page">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="brand-icon">📊</div>
+      <h1>Dashboard de Metas</h1>
+      <p>Plataforma analítica de performance comercial</p>
+    </div>
+    <div class="login-field">
+      <label for="usr">Usuário</label>
+      <input type="text" id="usr" placeholder="Digite seu usuário" autocomplete="username">
+    </div>
+    <div class="login-field">
+      <label for="pwd">Senha</label>
+      <input type="password" id="pwd" placeholder="Digite sua senha" autocomplete="current-password">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Entrar</button>
+    <div class="login-error" id="login-error">Usuário ou senha inválidos. Tente novamente.</div>
+    <div class="login-footer">Dashboard de Metas v1.0 &mdash; Uso interno</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     APP SHELL
+══════════════════════════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <div class="brand-dot">📊</div>
+        <div class="sidebar-brand-text">
+          <h2>Metas Analytics</h2>
+          <p>Dashboard v1.0</p>
+        </div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Principal</div>
+      <div class="nav-item active" onclick="navigate('home')" data-page="home">
+        <span class="nav-icon">🏠</span> Home
+      </div>
+      <div class="nav-section-label">Dados</div>
+      <div class="nav-item" onclick="navigate('upload')" data-page="upload">
+        <span class="nav-icon">📂</span> Importar Excel
+      </div>
+      <div class="nav-item" onclick="navigate('dashboard')" data-page="dashboard" id="nav-dashboard">
+        <span class="nav-icon">📈</span> Dashboard
+        <span class="nav-badge" id="dash-badge" style="display:none">●</span>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="user-avatar">A</div>
+        <div class="user-info">
+          <div class="user-name">Admin</div>
+          <div class="user-role">Analista de Dados</div>
+        </div>
+        <button class="logout-btn" onclick="doLogout()" title="Sair">⏻</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- ── HOME ─────────────────────────────────────────── -->
+    <section id="page-home" class="page-section active">
+      <div class="page-header">
+        <div>
+          <h1>Home</h1>
+          <p>Visão geral da plataforma</p>
+        </div>
+        <div class="header-right">
+          <div class="header-badge">
+            <span class="dot"></span>
+            Sistema online
+          </div>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="welcome-hero">
+          <div class="hero-tag">✨ Plataforma analítica</div>
+          <h2>Bem-vindo ao Dashboard de Metas</h2>
+          <p>Esta plataforma substitui o Power BI para análise de performance comercial. Importe sua planilha de ativos, visualize metas vs. resultados realizados por estabelecimento, canal e mês — tudo em um dashboard interativo e de alta performance.</p>
+        </div>
+        <div class="info-grid">
+          <div class="info-card">
+            <div class="ic-icon blue">📂</div>
+            <h3>Importe sua Planilha</h3>
+            <p>Carregue o arquivo <strong>ATIVOS_MATRIZ</strong> (XLSB/XLSX/XLS). O sistema lê automaticamente a aba <strong>RESUMO_CLIENTE</strong> e extrai todos os dados de meta e performance.</p>
+          </div>
+          <div class="info-card">
+            <div class="ic-icon green">📊</div>
+            <h3>Analise o Dashboard</h3>
+            <p>Visualize KPIs consolidados, gráficos de ranking por canal, comparativo mês a mês (Mai/Jun) e a tabela completa de clientes com status de performance.</p>
+          </div>
+          <div class="info-card">
+            <div class="ic-icon purple">🔍</div>
+            <h3>Filtre e Explore</h3>
+            <p>Filtre por canal, busque por fantasia ou CNPJ, ordene por qualquer coluna e veja quem bateu meta, quem está em baixa performance e quem é giro zero.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── UPLOAD ─────────────────────────────────────── -->
+    <section id="page-upload" class="page-section">
+      <div class="page-header">
+        <div>
+          <h1>Importar Excel</h1>
+          <p>Carregue a planilha ATIVOS_MATRIZ — aba RESUMO_CLIENTE</p>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="upload-container">
+          <div class="upload-zone" id="upload-zone"
+               ondragover="event.preventDefault(); this.classList.add('drag-over')"
+               ondragleave="this.classList.remove('drag-over')"
+               ondrop="handleDrop(event)">
+            <div class="upload-icon">📊</div>
+            <h3>Arraste e solte sua planilha aqui</h3>
+            <p>Formatos suportados: XLSB, XLSX, XLS</p>
+            <input type="file" id="file-input" accept=".xlsx,.xlsb,.xls" onchange="handleFile(event)">
+            <button class="btn-primary" onclick="document.getElementById('file-input').click()">
+              📁 Selecionar Arquivo
+            </button>
+          </div>
+          <div class="upload-status" id="upload-status"></div>
+          <div class="upload-guide">
+            <h4>Colunas esperadas na aba RESUMO_CLIENTE</h4>
+            <table class="col-table">
+              <thead>
+                <tr>
+                  <th>Coluna</th>
+                  <th>Descrição</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>CODIGO</td><td>Código único do estabelecimento</td></tr>
+                <tr><td>FANTASIA</td><td>Nome fantasia do cliente</td></tr>
+                <tr><td>RAZAO</td><td>Razão social</td></tr>
+                <tr><td>CANAL</td><td>Canal de venda (ADEGA, BAR A/B, RESTAURANTE…)</td></tr>
+                <tr><td>CONTRATO/OPP</td><td>Tipo de contrato ou oportunidade</td></tr>
+                <tr><td>Meta HL total</td><td>Meta total em Hectolitros</td></tr>
+                <tr><td>2026-05</td><td>Volume realizado em Maio/2026</td></tr>
+                <tr><td>2026-06</td><td>Volume realizado em Junho/2026</td></tr>
+                <tr><td>HL total</td><td>Total acumulado realizado</td></tr>
+                <tr><td>GAP</td><td>Diferença entre meta e realizado</td></tr>
+                <tr><td>STATUS</td><td>META BATIDA / BAIXA PERFORMANCE / GIRO ZERO</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── DASHBOARD ──────────────────────────────────── -->
+    <section id="page-dashboard" class="page-section">
+      <div class="page-header">
+        <div>
+          <h1>Dashboard de Metas</h1>
+          <p id="dash-subtitle">Carregue uma planilha para visualizar os dados</p>
+        </div>
+        <div class="header-right">
+          <button class="btn-secondary" onclick="navigate('upload')">📂 Atualizar dados</button>
+          <button class="btn-secondary" onclick="exportCSV()">⬇ Exportar CSV</button>
+        </div>
+      </div>
+      <div id="dash-no-data" class="dash-no-data">
+        <div class="no-data-icon">📭</div>
+        <h3>Nenhum dado carregado</h3>
+        <p>Importe sua planilha ATIVOS_MATRIZ para visualizar<br>o dashboard completo de metas e performance.</p>
+        <button class="btn-link" onclick="navigate('upload')">Ir para Importar Excel →</button>
+      </div>
+      <div id="dash-content" style="display:none">
+        <div class="section-body" style="padding-top:24px">
+
+          <!-- KPIs -->
+          <div class="kpi-grid" id="kpi-grid"></div>
+
+          <!-- Tabs mês -->
+          <div class="month-tabs" id="month-tabs">
+            <button class="month-tab active" onclick="setMonth('all',this)">Acumulado</button>
+            <button class="month-tab" onclick="setMonth('05',this)">Mai 2026</button>
+            <button class="month-tab" onclick="setMonth('06',this)">Jun 2026</button>
+          </div>
+
+          <!-- Charts row 1 -->
+          <div class="charts-grid">
+            <div class="chart-card">
+              <div class="chart-title">Volume por Canal</div>
+              <div class="chart-sub">Realizado acumulado por canal (HL)</div>
+              <div class="chart-wrap" style="height:240px">
+                <canvas id="chart-canal"></canvas>
+              </div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">Distribuição de Status</div>
+              <div class="chart-sub">Meta Batida · Baixa Performance · Giro Zero</div>
+              <div class="chart-wrap" style="height:240px">
+                <canvas id="chart-status"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts row 2 -->
+          <div class="charts-grid">
+            <div class="chart-card">
+              <div class="chart-title">Mai vs Jun 2026</div>
+              <div class="chart-sub">Comparativo de volume realizado por canal (HL)</div>
+              <div class="chart-wrap" style="height:240px">
+                <canvas id="chart-compare"></canvas>
+              </div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">% de Atingimento da Meta</div>
+              <div class="chart-sub">Percentual médio de atingimento por canal</div>
+              <div class="chart-wrap" style="height:240px">
+                <canvas id="chart-pct"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top performers -->
+          <div class="performers-grid">
+            <div class="chart-card">
+              <div class="chart-title">🏆 Top 10 — Maior Volume Realizado</div>
+              <div class="chart-sub">Clientes com maior HL acumulado</div>
+              <ul class="performer-list" id="top-performers"></ul>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">⚠️ Bottom 10 — Maior GAP (abaixo da meta)</div>
+              <div class="chart-sub">Clientes com maior déficit em relação à meta</div>
+              <ul class="performer-list" id="bottom-performers"></ul>
+            </div>
+          </div>
+
+          <!-- Table -->
+          <div class="table-card">
+            <div class="table-header">
+              <div>
+                <h3>Tabela de Clientes</h3>
+                <p id="table-count">0 registros</p>
+              </div>
+              <div class="table-controls">
+                <input type="text" class="search-input" id="tbl-search"
+                       placeholder="Buscar por fantasia ou código…" oninput="filterTable()">
+                <select class="filter-select" id="tbl-canal" onchange="filterTable()">
+                  <option value="">Todos os Canais</option>
+                </select>
+                <select class="filter-select" id="tbl-status" onchange="filterTable()">
+                  <option value="">Todos os Status</option>
+                  <option value="META BATIDA">Meta Batida</option>
+                  <option value="BAIXA PERFORMANCE">Baixa Performance</option>
+                  <option value="GIRO ZERO">Giro Zero</option>
+                </select>
+              </div>
+            </div>
+            <div style="overflow-x:auto">
+              <table class="data-table" id="data-table">
+                <thead>
+                  <tr>
+                    <th onclick="sortTable('codigo')">Código <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable('fantasia')">Fantasia <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable('canal')">Canal <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable('meta')">Meta HL <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable('mai')">Mai 2026 <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable('jun')">Jun 2026 <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable('realizado')">Realizado <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable('pct')">% Meta</th>
+                    <th onclick="sortTable('gap')">GAP <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable('status')">Status <span class="sort-icon">↕</span></th>
+                  </tr>
+                </thead>
+                <tbody id="table-body"></tbody>
+              </table>
+            </div>
+            <div class="table-pagination">
+              <span id="pagination-info"></span>
+              <div class="pagination-btns" id="pagination-btns"></div>
+            </div>
+          </div>
+
+        </div><!-- /section-body -->
+      </div><!-- /dash-content -->
+    </section>
+
+  </main>
+</div><!-- /app -->
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   AUTH
+══════════════════════════════════════════════════════════════ */
+const CREDENTIALS = { user: 'admin', pass: 'admin$2542' };
+
+function doLogin() {
+  const u = document.getElementById('usr').value.trim();
+  const p = document.getElementById('pwd').value;
+  const err = document.getElementById('login-error');
+  if (u === CREDENTIALS.user && p === CREDENTIALS.pass) {
+    document.getElementById('login-page').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    err.style.display = 'none';
+  } else {
+    err.style.display = 'block';
+    document.getElementById('pwd').value = '';
+    document.getElementById('pwd').focus();
+  }
+}
+
+function doLogout() {
+  document.getElementById('login-page').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('usr').value = '';
+  document.getElementById('pwd').value = '';
+}
+
+document.addEventListener('keydown', e => {
+  if (document.getElementById('login-page').style.display !== 'none' && e.key === 'Enter') doLogin();
+});
+
+/* ══════════════════════════════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════════════════════════════ */
+function navigate(page) {
+  document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  const navEl = document.querySelector(`[data-page="${page}"]`);
+  if (navEl) navEl.classList.add('active');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   EXCEL PARSING
+══════════════════════════════════════════════════════════════ */
+let rawData = [];
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) processFile(file);
+}
+
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (file) processFile(file);
+}
+
+function showStatus(type, msg) {
+  const el = document.getElementById('upload-status');
+  el.className = 'upload-status ' + type;
+  el.innerHTML = msg;
+  el.style.display = 'flex';
+}
+
+function processFile(file) {
+  showStatus('loading', '⏳ Processando planilha…');
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, { type: 'array', cellDates: false, sheetRows: 0 });
+
+      // procura aba RESUMO_CLIENTE (case-insensitive, aceita qualquer nome com RESUMO)
+      let sheetName = wb.SheetNames.find(n => n.toUpperCase().replace(/\s/g,'').includes('RESUMO'));
+      if (!sheetName) {
+        // fallback: última aba que não seja abas conhecidas de config
+        const skip = ['PREMISSA','VOL_HL','DESCRICAO','CONTRATOS','META_GV','GESTAO'];
+        sheetName = wb.SheetNames.find(n => !skip.some(s => n.toUpperCase().includes(s)));
+      }
+      if (!sheetName) {
+        showStatus('error', '❌ Aba RESUMO_CLIENTE não encontrada.<br>Abas disponíveis: <strong>' + wb.SheetNames.join(', ') + '</strong>');
+        return;
+      }
+
+      const ws = wb.Sheets[sheetName];
+
+      // tenta ler pulando linhas vazias do topo (planilhas com cabeçalho deslocado)
+      let json = XLSX.utils.sheet_to_json(ws, { defval: '', raw: false });
+
+      // se a primeira linha não parece cabeçalho útil, tenta raw com header explícito
+      if (!json.length || !hasUsefulHeaders(Object.keys(json[0] || {}))) {
+        json = XLSX.utils.sheet_to_json(ws, { defval: '', raw: false, range: 1 });
+      }
+      if (!json.length || !hasUsefulHeaders(Object.keys(json[0] || {}))) {
+        json = XLSX.utils.sheet_to_json(ws, { defval: '', raw: false, range: 2 });
+      }
+
+      if (!json.length) {
+        showStatus('error', '❌ Nenhum dado encontrado na aba <strong>' + sheetName + '</strong>');
+        return;
+      }
+
+      const headers = Object.keys(json[0] || {});
+      rawData = parseRows(json);
+
+      if (!rawData.length) {
+        const hdrs = Object.keys(json[0] || {});
+        const hdrList = hdrs.map(h => `<li style="font-family:monospace;font-size:11px;padding:2px 0;border-bottom:1px solid #fecaca">"${h}"</li>`).join('');
+        showStatus('error',
+          `<div>
+            <strong>❌ Colunas não reconhecidas na aba "${sheetName}"</strong><br>
+            <small style="color:#991b1b">Total de colunas encontradas: ${hdrs.length} | Total de linhas: ${json.length}</small><br><br>
+            <strong style="font-size:12px">Headers encontrados (primeiros ${Math.min(hdrs.length,30)}):</strong>
+            <ul style="margin:6px 0 0 0;padding:0;list-style:none;max-height:120px;overflow-y:auto;background:#fff5f5;border:1px solid #fecaca;border-radius:6px;padding:6px 10px">${hdrList}</ul>
+            <small style="color:#991b1b;display:block;margin-top:8px">Abra o Console (F12) para ver o mapeamento completo.</small>
+          </div>`
+        );
+        return;
+      }
+
+      showStatus('success', `✅ <strong>${rawData.length} registros</strong> carregados da aba "<strong>${sheetName}</strong>" — <a href="#" style="color:#065f46;font-weight:700" onclick="navigate('dashboard');return false">Ver Dashboard →</a>`);
+      document.getElementById('dash-badge').style.display = 'inline';
+      buildDashboard();
+    } catch(err) {
+      showStatus('error', '❌ Erro ao processar arquivo: <strong>' + err.message + '</strong>');
+      console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function hasUsefulHeaders(headers) {
+  const joined = headers.join('|').toUpperCase();
+  return joined.includes('FANTASIA') || joined.includes('CANAL') || joined.includes('CODIGO') || joined.includes('META');
+}
+
+function normalize(str) {
+  return (str || '').toString()
+    .toUpperCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')  // remove acentos
+    .replace(/[\s_\-\.]+/g, ' ')                        // espaços/underscore/hífen/ponto → espaço
+    .replace(/[^\w\s\/]/g, '')                          // remove outros especiais
+    .trim();
+}
+
+function normKey(str) {
+  // versão mais agressiva: remove tudo que não é letra/número
+  return normalize(str).replace(/\s+/g, '');
+}
+
+function findCol(headers, ...candidates) {
+  for (const c of candidates) {
+    const nc = normKey(c);
+    // match exato normalizado
+    let found = headers.find(h => normKey(h) === nc);
+    if (found !== undefined) return found;
+    // match por conteúdo (contém)
+    found = headers.find(h => normKey(h).includes(nc) || nc.includes(normKey(h).substring(0,3)));
+    if (found !== undefined && normKey(found).length > 1) return found;
+  }
+  return null;
+}
+
+function toNum(v) {
+  if (v === '' || v === null || v === undefined || v === '-' || v === '#N/D' || v === '#VALUE!') return 0;
+  const s = String(v).replace(/\s/g,'').replace(',','.');
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
+
+function parseRows(json) {
+  const headers = Object.keys(json[0] || {});
+  console.log('[DEBUG] Headers encontrados:', headers);
+
+  const colCod    = findCol(headers, 'CODIGO', 'COD', 'CODCLI');
+  const colFant   = findCol(headers, 'FANTASIA', 'NOME FANTASIA', 'NOMEFANTASIA');
+  const colRazao  = findCol(headers, 'RAZAO', 'RAZAO SOCIAL', 'RAZAOSOCIAL');
+  const colCanal  = findCol(headers, 'CANAL');
+  const colOpp    = findCol(headers, 'CONTRATO OPP', 'CONTRATO', 'OPP');
+  // Meta: tenta variantes comuns primeiro
+  const colMeta   = findCol(headers,
+    'META HL TOTAL', 'META HL TOTL', 'METAHLTOTAL', 'META HL', 'METAHL', 'META TOTAL', 'META');
+  // Meses: headers podem ser datas serializadas (ex: "45000") ou "2026-05"
+  const colMai    = findColMes(headers, '2026-05', '2026-5', '202605', 'MAI', 'MAIO', '05');
+  const colJun    = findColMes(headers, '2026-06', '2026-6', '202606', 'JUN', 'JUNHO', '06');
+  const colHLTot  = findCol(headers, 'HL TOTAL', 'HLTOTAL', 'TOTAL HL', 'HL TOT', 'HL');
+  const colGap    = findCol(headers, 'GAP');
+  const colStatus = findCol(headers, 'STATUS', 'SITUACAO', 'SITUAÇÃO');
+
+  console.log('[DEBUG] Mapeamento:', {colCod,colFant,colCanal,colMeta,colMai,colJun,colHLTot,colGap,colStatus});
+
+  // se não achou nem fantasia nem canal, retorna vazio para trigger de erro com headers
+  if (!colFant && !colCanal && !colCod) return [];
+
+  return json
+    .filter(r => {
+      const v = r[colCod] || r[colFant];
+      return v && String(v).trim() !== '';
+    })
+    .map(r => {
+      const meta      = toNum(r[colMeta]);
+      const mai       = toNum(r[colMai]);
+      const jun       = toNum(r[colJun]);
+      const realizado = toNum(r[colHLTot]) || (mai + jun);
+      const gap       = colGap ? toNum(r[colGap]) : (meta - realizado);
+      const pct       = meta > 0 ? (realizado / meta) * 100 : 0;
+      const rawStatus = colStatus ? String(r[colStatus] || '') : '';
+      const status    = rawStatus.toUpperCase().trim() || deriveStatus(pct, realizado);
+      return {
+        codigo:   String(r[colCod]   || '').trim(),
+        fantasia: String(r[colFant]  || '').trim(),
+        razao:    String(r[colRazao] || '').trim(),
+        canal:    String(r[colCanal] || '').toUpperCase().trim(),
+        contrato: String(r[colOpp]   || '').trim(),
+        meta, mai, jun, realizado, gap, pct, status
+      };
+    })
+    .filter(r => r.meta > 0 || r.realizado > 0 || r.fantasia.length > 1);
+}
+
+// Busca coluna de mês: tenta nome exato, depois verifica se é data serial do Excel
+function findColMes(headers, ...candidates) {
+  const found = findCol(headers, ...candidates);
+  if (found) return found;
+  // headers numéricos (datas serializadas): Excel serial para 2026-05-01 = ~45??
+  // tenta qualquer header que pareça número e caia no range do mês
+  return null;
+}
+
+function deriveStatus(pct, realizado) {
+  if (realizado === 0) return 'GIRO ZERO';
+  if (pct >= 100) return 'META BATIDA';
+  return 'BAIXA PERFORMANCE';
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DASHBOARD BUILD
+══════════════════════════════════════════════════════════════ */
+let activeMonth = 'all';
+const charts = {};
+
+function setMonth(m, btn) {
+  activeMonth = m;
+  document.querySelectorAll('.month-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  buildCharts();
+  filterTable();
+}
+
+function buildDashboard() {
+  navigate('dashboard');
+  document.getElementById('dash-no-data').style.display = 'none';
+  document.getElementById('dash-content').style.display = 'block';
+  document.getElementById('dash-subtitle').textContent =
+    `${rawData.length} estabelecimentos · Dados atualizados`;
+
+  buildKPIs();
+  buildCharts();
+  populateCanalFilter();
+  filterTable();
+  buildTopPerformers();
+}
+
+function getDataForMonth(data, month) {
+  if (month === 'all') return data;
+  return data.map(r => ({
+    ...r,
+    realizado: month === '05' ? r.mai : r.jun,
+    gap: r.meta > 0 ? r.meta / 2 - (month === '05' ? r.mai : r.jun) : 0,
+    pct: r.meta > 0 ? ((month === '05' ? r.mai : r.jun) / (r.meta)) * 100 : 0
+  }));
+}
+
+function buildKPIs() {
+  const total     = rawData.length;
+  const metaBatida = rawData.filter(r => r.status === 'META BATIDA').length;
+  const giroZero  = rawData.filter(r => r.status === 'GIRO ZERO').length;
+  const totalMeta = rawData.reduce((s,r) => s + r.meta, 0);
+  const totalReal = rawData.reduce((s,r) => s + r.realizado, 0);
+  const pctGeral  = totalMeta > 0 ? (totalReal / totalMeta * 100) : 0;
+  const totalMai  = rawData.reduce((s,r) => s + r.mai, 0);
+  const totalJun  = rawData.reduce((s,r) => s + r.jun, 0);
+  const varMoM    = totalMai > 0 ? ((totalJun - totalMai) / totalMai * 100) : 0;
+
+  document.getElementById('kpi-grid').innerHTML = `
+    <div class="kpi-card blue">
+      <div class="kpi-label">Total Clientes</div>
+      <div class="kpi-value">${total.toLocaleString('pt-BR')}</div>
+      <div class="kpi-sub">estabelecimentos ativos</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">Meta Batida</div>
+      <div class="kpi-value">${metaBatida}</div>
+      <div class="kpi-sub">${((metaBatida/total)*100).toFixed(1)}% do total</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">Atingimento Geral</div>
+      <div class="kpi-value">${pctGeral.toFixed(1)}%</div>
+      <div class="kpi-sub">${fmtHL(totalReal)} HL de ${fmtHL(totalMeta)} HL</div>
+    </div>
+    <div class="kpi-card purple">
+      <div class="kpi-label">Volume Jun 2026</div>
+      <div class="kpi-value">${fmtHL(totalJun)}</div>
+      <div class="kpi-sub">
+        vs Mai: <span class="kpi-delta ${varMoM>=0?'up':'down'}">${varMoM>=0?'▲':'▼'} ${Math.abs(varMoM).toFixed(1)}%</span>
+      </div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">Giro Zero</div>
+      <div class="kpi-value">${giroZero}</div>
+      <div class="kpi-sub">${((giroZero/total)*100).toFixed(1)}% sem volume</div>
+    </div>
+  `;
+}
+
+function fmtHL(v) {
+  if (v >= 1000) return (v/1000).toFixed(1).replace('.',',') + 'k';
+  return v.toFixed(1).replace('.',',');
+}
+
+function buildCharts() {
+  const data = getDataForMonth(rawData, activeMonth);
+
+  // ── Canal bar chart
+  const canalMap = {};
+  data.forEach(r => {
+    if (!r.canal) return;
+    if (!canalMap[r.canal]) canalMap[r.canal] = 0;
+    canalMap[r.canal] += r.realizado;
+  });
+  const canalLabels = Object.keys(canalMap).sort((a,b)=>canalMap[b]-canalMap[a]).slice(0,10);
+  const canalVals   = canalLabels.map(c => canalMap[c]);
+
+  destroyChart('chart-canal');
+  charts['chart-canal'] = new Chart(document.getElementById('chart-canal'), {
+    type: 'bar',
+    data: {
+      labels: canalLabels,
+      datasets: [{
+        label: 'Volume Realizado (HL)',
+        data: canalVals,
+        backgroundColor: canalLabels.map((_,i) => `hsl(${210+i*25},70%,${55+i*2}%)`),
+        borderRadius: 6, borderSkipped: false
+      }]
+    },
+    options: barOpts('HL', true)
+  });
+
+  // ── Status doughnut
+  const statusCounts = {
+    'META BATIDA': data.filter(r=>r.status==='META BATIDA').length,
+    'BAIXA PERFORMANCE': data.filter(r=>r.status==='BAIXA PERFORMANCE').length,
+    'GIRO ZERO': data.filter(r=>r.status==='GIRO ZERO').length
+  };
+  destroyChart('chart-status');
+  charts['chart-status'] = new Chart(document.getElementById('chart-status'), {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(statusCounts),
+      datasets: [{
+        data: Object.values(statusCounts),
+        backgroundColor: ['#10b981','#f59e0b','#ef4444'],
+        borderWidth: 3, borderColor: '#fff',
+        hoverOffset: 8
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: { position: 'bottom', labels: { font:{size:11}, padding:12 } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} clientes` } }
+      }
+    }
+  });
+
+  // ── Mai vs Jun grouped bar
+  const canais = [...new Set(rawData.map(r=>r.canal).filter(Boolean))].sort();
+  const maiByCanal = canais.map(c => rawData.filter(r=>r.canal===c).reduce((s,r)=>s+r.mai,0));
+  const junByCanal = canais.map(c => rawData.filter(r=>r.canal===c).reduce((s,r)=>s+r.jun,0));
+
+  destroyChart('chart-compare');
+  charts['chart-compare'] = new Chart(document.getElementById('chart-compare'), {
+    type: 'bar',
+    data: {
+      labels: canais,
+      datasets: [
+        { label: 'Mai 2026', data: maiByCanal, backgroundColor:'rgba(59,130,246,.7)', borderRadius:4, borderSkipped:false },
+        { label: 'Jun 2026', data: junByCanal, backgroundColor:'rgba(16,185,129,.7)', borderRadius:4, borderSkipped:false }
+      ]
+    },
+    options: barOpts('HL', false)
+  });
+
+  // ── % atingimento por canal
+  const pctMap = {};
+  rawData.forEach(r => {
+    if (!r.canal || r.meta <= 0) return;
+    if (!pctMap[r.canal]) pctMap[r.canal] = { sum:0, n:0 };
+    pctMap[r.canal].sum += r.pct;
+    pctMap[r.canal].n++;
+  });
+  const pctLabels = Object.keys(pctMap).sort((a,b) => pctMap[b].sum/pctMap[b].n - pctMap[a].sum/pctMap[a].n);
+  const pctVals   = pctLabels.map(c => parseFloat((pctMap[c].sum/pctMap[c].n).toFixed(1)));
+
+  destroyChart('chart-pct');
+  charts['chart-pct'] = new Chart(document.getElementById('chart-pct'), {
+    type: 'bar',
+    data: {
+      labels: pctLabels,
+      datasets: [{
+        label: '% Atingimento Médio',
+        data: pctVals,
+        backgroundColor: pctVals.map(v => v >= 100 ? '#10b981' : v >= 70 ? '#f59e0b' : '#ef4444'),
+        borderRadius: 6, borderSkipped: false
+      }]
+    },
+    options: barOpts('%', true)
+  });
+}
+
+function destroyChart(id) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+function barOpts(unit, indexAxis) {
+  return {
+    responsive: true, maintainAspectRatio: false,
+    indexAxis: indexAxis ? 'y' : 'x',
+    plugins: {
+      legend: { display: !indexAxis },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.formattedValue} ${unit}` } }
+    },
+    scales: {
+      x: { grid:{color:'rgba(0,0,0,.04)'}, ticks:{font:{size:11}} },
+      y: { grid:{color:'rgba(0,0,0,.04)'}, ticks:{font:{size:11}} }
+    }
+  };
+}
+
+function buildTopPerformers() {
+  const sorted = [...rawData].filter(r => r.realizado > 0).sort((a,b)=>b.realizado-a.realizado);
+  const top = sorted.slice(0,10);
+  const rankClass = i => i===0?'gold':i===1?'silver':i===2?'bronze':'';
+
+  document.getElementById('top-performers').innerHTML = top.map((r,i) => `
+    <li class="performer-item">
+      <div class="performer-rank ${rankClass(i)}">${i+1}</div>
+      <div class="performer-info">
+        <div class="performer-name">${r.fantasia||r.codigo}</div>
+        <div class="performer-canal">${r.canal}</div>
+      </div>
+      <div class="performer-value">${fmtHL(r.realizado)} HL</div>
+    </li>`).join('');
+
+  const bottom = [...rawData].filter(r=>r.gap>0).sort((a,b)=>b.gap-a.gap).slice(0,10);
+  document.getElementById('bottom-performers').innerHTML = bottom.map((r,i) => `
+    <li class="performer-item">
+      <div class="performer-rank ${rankClass(i)}">${i+1}</div>
+      <div class="performer-info">
+        <div class="performer-name">${r.fantasia||r.codigo}</div>
+        <div class="performer-canal">${r.canal}</div>
+      </div>
+      <div class="performer-value" style="color:#ef4444">-${fmtHL(r.gap)} HL</div>
+    </li>`).join('');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TABLE
+══════════════════════════════════════════════════════════════ */
+let filteredData = [];
+let sortKey = 'realizado';
+let sortDir = -1;
+let currentPage = 1;
+const PAGE_SIZE = 25;
+
+function populateCanalFilter() {
+  const canais = [...new Set(rawData.map(r=>r.canal).filter(Boolean))].sort();
+  const sel = document.getElementById('tbl-canal');
+  sel.innerHTML = '<option value="">Todos os Canais</option>' +
+    canais.map(c => `<option value="${c}">${c}</option>`).join('');
+}
+
+function filterTable() {
+  const q      = (document.getElementById('tbl-search').value || '').toLowerCase();
+  const canal  = document.getElementById('tbl-canal').value;
+  const status = document.getElementById('tbl-status').value;
+
+  let data = getDataForMonth(rawData, activeMonth);
+
+  if (q)      data = data.filter(r => r.fantasia.toLowerCase().includes(q) || r.codigo.toLowerCase().includes(q));
+  if (canal)  data = data.filter(r => r.canal === canal);
+  if (status) data = data.filter(r => r.status === status);
+
+  data.sort((a,b) => {
+    const va = a[sortKey], vb = b[sortKey];
+    return typeof va === 'string' ? va.localeCompare(vb)*sortDir : (va-vb)*sortDir;
+  });
+
+  filteredData = data;
+  currentPage = 1;
+  renderTable();
+}
+
+function sortTable(key) {
+  if (sortKey === key) sortDir *= -1;
+  else { sortKey = key; sortDir = -1; }
+  filterTable();
+}
+
+function renderTable() {
+  const start = (currentPage-1)*PAGE_SIZE;
+  const page  = filteredData.slice(start, start+PAGE_SIZE);
+
+  document.getElementById('table-count').textContent = `${filteredData.length} registros`;
+  document.getElementById('table-body').innerHTML = page.map(r => {
+    const pct   = Math.min(r.pct, 200);
+    const color = r.pct >= 100 ? '#10b981' : r.pct >= 70 ? '#f59e0b' : '#ef4444';
+    const sPill = statusPill(r.status);
+    return `<tr>
+      <td style="font-family:var(--mono);font-size:12px;color:var(--text2)">${r.codigo}</td>
+      <td style="font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis" title="${r.fantasia}">${r.fantasia}</td>
+      <td><span style="font-size:11px;font-weight:600;color:var(--text2)">${r.canal}</span></td>
+      <td style="font-family:var(--mono)">${r.meta.toFixed(2).replace('.',',')}</td>
+      <td style="font-family:var(--mono)">${r.mai.toFixed(2).replace('.',',')}</td>
+      <td style="font-family:var(--mono)">${r.jun.toFixed(2).replace('.',',')}</td>
+      <td style="font-family:var(--mono);font-weight:600">${r.realizado.toFixed(2).replace('.',',')}</td>
+      <td>
+        <div style="display:flex;align-items:center">
+          <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${Math.min(pct,100)}%;background:${color}"></div></div>
+          <span class="pct-text" style="color:${color}">${r.pct.toFixed(0)}%</span>
+        </div>
+      </td>
+      <td style="font-family:var(--mono);color:${r.gap>0?'#ef4444':'#10b981'};font-weight:600">
+        ${r.gap>0?'-':''}${Math.abs(r.gap).toFixed(2).replace('.',',')}
+      </td>
+      <td>${sPill}</td>
+    </tr>`;
+  }).join('');
+
+  renderPagination();
+}
+
+function statusPill(s) {
+  if (!s) return '<span class="status-pill gray">–</span>';
+  const st = s.toUpperCase();
+  if (st.includes('META BATIDA'))       return '<span class="status-pill green">✓ Meta Batida</span>';
+  if (st.includes('BAIXA'))             return '<span class="status-pill amber">↓ Baixa Perf.</span>';
+  if (st.includes('GIRO ZERO'))         return '<span class="status-pill red">✕ Giro Zero</span>';
+  return `<span class="status-pill blue">${s}</span>`;
+}
+
+function renderPagination() {
+  const total = Math.ceil(filteredData.length / PAGE_SIZE);
+  document.getElementById('pagination-info').textContent =
+    `Página ${currentPage} de ${total} (${filteredData.length} registros)`;
+
+  const btns = document.getElementById('pagination-btns');
+  let html = `<button class="page-btn" ${currentPage===1?'disabled':''} onclick="goPage(${currentPage-1})">‹</button>`;
+  const range = 2;
+  for (let i = 1; i <= total; i++) {
+    if (i === 1 || i === total || (i >= currentPage-range && i <= currentPage+range)) {
+      html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+    } else if (i === currentPage-range-1 || i === currentPage+range+1) {
+      html += `<button class="page-btn" disabled>…</button>`;
+    }
+  }
+  html += `<button class="page-btn" ${currentPage===total||total===0?'disabled':''} onclick="goPage(${currentPage+1})">›</button>`;
+  btns.innerHTML = html;
+}
+
+function goPage(p) {
+  const total = Math.ceil(filteredData.length / PAGE_SIZE);
+  if (p < 1 || p > total) return;
+  currentPage = p;
+  renderTable();
+  document.querySelector('.main-content').scrollTop = 0;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   EXPORT
+══════════════════════════════════════════════════════════════ */
+function exportCSV() {
+  if (!rawData.length) { alert('Nenhum dado para exportar.'); return; }
+  const header = 'Codigo;Fantasia;Razao;Canal;Meta HL;Mai 2026;Jun 2026;Realizado;PCT %;GAP;Status';
+  const rows = rawData.map(r =>
+    [r.codigo,r.fantasia,r.razao,r.canal,
+     r.meta.toFixed(2),r.mai.toFixed(2),r.jun.toFixed(2),
+     r.realizado.toFixed(2),(r.pct.toFixed(1)+'%'),r.gap.toFixed(2),r.status
+    ].join(';')
+  );
+  const blob = new Blob(['﻿'+header+'\n'+rows.join('\n')], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'metas_export_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+</script>
+</body>
+</html>
