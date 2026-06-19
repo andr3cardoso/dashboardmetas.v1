@@ -13,7 +13,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; font-family: 'Inter', sans-serif; }
 
-/* ─── CSS Variables ─────────────────────────────────────────── */
+/* ─── CSS Variables — Light (default) ───────────────────────── */
 :root {
   --bg:          #f0f2f5;
   --surface:     #ffffff;
@@ -42,6 +42,90 @@ html, body { height: 100%; font-family: 'Inter', sans-serif; }
   --shadow:      0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
   --shadow-lg:   0 4px 16px rgba(0,0,0,.10);
   --mono:        'IBM Plex Mono', monospace;
+  --chart-grid:  rgba(0,0,0,.05);
+}
+
+/* ─── Dark theme override ────────────────────────────────────── */
+[data-theme="dark"] {
+  --bg:          #0b0e18;
+  --surface:     #111827;
+  --surface2:    #1a2236;
+  --border:      #1e2a42;
+  --border2:     #2a3a58;
+  --text:        #eef0f6;
+  --text2:       #8892aa;
+  --text3:       #4e5870;
+  --sidebar-bg:  #070b12;
+  --sidebar-txt: #8892aa;
+  --sidebar-act: #ffffff;
+  --green-bg:    rgba(16,185,129,.15);
+  --red-bg:      rgba(239,68,68,.15);
+  --amber-bg:    rgba(245,158,11,.15);
+  --purple-bg:   rgba(139,92,246,.15);
+  --shadow:      0 1px 3px rgba(0,0,0,.4), 0 1px 2px rgba(0,0,0,.3);
+  --shadow-lg:   0 4px 20px rgba(0,0,0,.5);
+  --chart-grid:  rgba(255,255,255,.05);
+}
+[data-theme="dark"] .upload-status.success { background: rgba(16,185,129,.15); color: #34d399; }
+[data-theme="dark"] .upload-status.error   { background: rgba(239,68,68,.15);  color: #f87171; }
+[data-theme="dark"] .upload-status.loading { background: rgba(59,130,246,.15); color: #60a5fa; }
+[data-theme="dark"] .status-pill.green  { background: rgba(16,185,129,.15); color: #34d399; }
+[data-theme="dark"] .status-pill.red    { background: rgba(239,68,68,.15);  color: #f87171; }
+[data-theme="dark"] .status-pill.amber  { background: rgba(245,158,11,.15); color: #fbbf24; }
+[data-theme="dark"] .status-pill.blue   { background: rgba(59,130,246,.15); color: #60a5fa; }
+[data-theme="dark"] .status-pill.gray   { background: rgba(255,255,255,.07); color: #6b7280; }
+[data-theme="dark"] .kpi-delta.up       { background: rgba(16,185,129,.15);  color: #34d399; }
+[data-theme="dark"] .kpi-delta.down     { background: rgba(239,68,68,.15);   color: #f87171; }
+[data-theme="dark"] .ic-icon.blue   { background: rgba(59,130,246,.15); }
+[data-theme="dark"] .ic-icon.green  { background: rgba(16,185,129,.15); }
+[data-theme="dark"] .ic-icon.purple { background: rgba(139,92,246,.15); }
+[data-theme="dark"] .search-input,
+[data-theme="dark"] .filter-select  { color-scheme: dark; }
+[data-theme="dark"] .col-table th   { background: var(--surface2); color: var(--text2); }
+[data-theme="dark"] .col-table td   { color: var(--text); }
+[data-theme="dark"] .month-tab.active { background: rgba(59,130,246,.25); color: #60a5fa; }
+[data-theme="dark"] .performer-rank        { background: rgba(255,255,255,.07); }
+[data-theme="dark"] .performer-rank.gold   { background: rgba(245,158,11,.2);  color: #fbbf24; }
+[data-theme="dark"] .performer-rank.silver { background: rgba(255,255,255,.1); color: #d1d5db; }
+[data-theme="dark"] .performer-rank.bronze { background: rgba(234,88,12,.2);   color: #fb923c; }
+
+/* ─── Theme toggle button ────────────────────────────────────── */
+.theme-toggle {
+  width: 36px; height: 36px; border-radius: 8px;
+  border: 1.5px solid var(--border2);
+  background: var(--surface2); color: var(--text2);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 16px;
+  transition: background .15s, border-color .15s, color .15s, transform .1s;
+  flex-shrink: 0;
+}
+.theme-toggle:hover {
+  border-color: var(--accent); color: var(--accent);
+  background: var(--surface); transform: scale(1.08);
+}
+
+/* ─── Active filter chip (shown when chart filter is active) ─── */
+.filter-chip {
+  display: none; align-items: center; gap: 6px;
+  padding: 5px 12px 5px 10px; border-radius: 20px;
+  background: rgba(59,130,246,.12); border: 1px solid rgba(59,130,246,.3);
+  color: var(--accent); font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: background .15s;
+}
+.filter-chip.visible { display: inline-flex; }
+.filter-chip:hover { background: rgba(59,130,246,.2); }
+.filter-chip .chip-x { font-size: 14px; opacity: .7; margin-left: 2px; }
+
+/* chart-card cursor pointer hint when interactive */
+.chart-card.interactive { cursor: pointer; }
+.chart-card.interactive:hover .chart-title::after {
+  content: ' ↗';
+  font-size: 11px; opacity: .5;
+}
+/* highlight ring when a chart filter is active on that card */
+.chart-card.filtered {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(59,130,246,.2);
 }
 
 /* ─── LOGIN PAGE ────────────────────────────────────────────── */
@@ -592,13 +676,89 @@ html, body { height: 100%; font-family: 'Inter', sans-serif; }
 .performer-canal { font-size: 11px; color: var(--text2); }
 .performer-value { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--text); }
 
-/* responsive */
+/* ─── Hamburger button (mobile only) ────────────────────────── */
+.hamburger {
+  display: none;
+  width: 38px; height: 38px; border-radius: 8px;
+  border: 1.5px solid var(--border2); background: var(--surface2);
+  align-items: center; justify-content: center;
+  cursor: pointer; font-size: 18px; flex-shrink: 0;
+  transition: background .15s;
+}
+.hamburger:hover { background: var(--surface); }
+
+/* sidebar overlay (mobile) */
+.sidebar-overlay {
+  display: none;
+  position: fixed; inset: 0; background: rgba(0,0,0,.5);
+  z-index: 90; backdrop-filter: blur(2px);
+}
+.sidebar-overlay.visible { display: block; }
+
+/* ─── Responsive breakpoints ─────────────────────────────────── */
 @media (max-width: 900px) {
-  .sidebar { width: 200px; min-width: 200px; }
-  .charts-grid { grid-template-columns: 1fr; }
+  /* sidebar becomes an off-canvas drawer */
+  .sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0;
+    width: 260px; min-width: 0;
+    transform: translateX(-100%);
+    transition: transform .25s cubic-bezier(.4,0,.2,1);
+    z-index: 200;
+    box-shadow: 4px 0 24px rgba(0,0,0,.3);
+  }
+  .sidebar.open { transform: translateX(0); }
+
+  .hamburger { display: flex; }
+
+  .main-content { width: 100%; }
+
+  .page-header { padding: 14px 16px; flex-wrap: wrap; gap: 10px; }
+  .page-header h1 { font-size: 17px; }
+  .header-right { gap: 8px; flex-wrap: wrap; }
+  .btn-secondary { padding: 8px 12px; font-size: 12px; }
+  .btn-secondary span.hide-sm { display: none; }
+
+  .section-body { padding: 16px; }
+
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+  .kpi-card { padding: 16px 14px; }
+  .kpi-value { font-size: 22px; }
+
+  .charts-grid   { grid-template-columns: 1fr; gap: 12px; margin-bottom: 16px; }
+  .performers-grid { grid-template-columns: 1fr; gap: 12px; margin-bottom: 16px; }
+  .info-grid     { grid-template-columns: 1fr; gap: 12px; }
+
+  .month-tabs { flex-wrap: wrap; width: 100%; }
+  .month-tab  { flex: 1; text-align: center; padding: 8px 10px; }
+
+  /* table: horizontal scroll + bigger tap targets */
+  .table-header { flex-direction: column; align-items: flex-start; gap: 12px; padding: 14px 16px; }
+  .table-controls { width: 100%; flex-wrap: wrap; gap: 8px; }
+  .search-input { width: 100%; }
+  .filter-select { flex: 1; min-width: 120px; }
+  .data-table th, .data-table td { padding: 9px 12px; }
+  .table-pagination { flex-direction: column; align-items: flex-start; gap: 10px; padding: 12px 16px; }
+
+  .welcome-hero { padding: 28px 20px; }
+  .welcome-hero h2 { font-size: 20px; }
+  .welcome-hero p  { font-size: 14px; }
+
+  .upload-container { max-width: 100%; }
+  .upload-zone { padding: 36px 20px; }
+
+  .filter-chip { font-size: 11px; }
+
+  /* active filter bar stacks below title on small screens */
+  .header-right { justify-content: flex-end; }
+}
+
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .kpi-value { font-size: 20px; }
+  .kpi-label { font-size: 10px; }
+  .page-header h1 { font-size: 15px; }
+  .chart-card { padding: 16px 14px; }
   .performers-grid { grid-template-columns: 1fr; }
-  .info-grid { grid-template-columns: 1fr; }
-  .kpi-grid { grid-template-columns: repeat(2,1fr); }
 }
 </style>
 </head>
@@ -633,8 +793,11 @@ html, body { height: 100%; font-family: 'Inter', sans-serif; }
 ══════════════════════════════════════════════════════════════ -->
 <div id="app">
 
+  <!-- Overlay para fechar sidebar no mobile -->
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
   <!-- SIDEBAR -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-brand">
         <div class="brand-dot">📊</div>
@@ -676,15 +839,19 @@ html, body { height: 100%; font-family: 'Inter', sans-serif; }
     <!-- ── HOME ─────────────────────────────────────────── -->
     <section id="page-home" class="page-section active">
       <div class="page-header">
-        <div>
-          <h1>Home</h1>
-          <p>Visão geral da plataforma</p>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="hamburger" onclick="openSidebar()">☰</button>
+          <div>
+            <h1>Home</h1>
+            <p>Visão geral da plataforma</p>
+          </div>
         </div>
         <div class="header-right">
           <div class="header-badge">
             <span class="dot"></span>
-            Sistema online
+            <span>Sistema online</span>
           </div>
+          <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema" id="theme-btn">🌙</button>
         </div>
       </div>
       <div class="section-body">
@@ -716,9 +883,15 @@ html, body { height: 100%; font-family: 'Inter', sans-serif; }
     <!-- ── UPLOAD ─────────────────────────────────────── -->
     <section id="page-upload" class="page-section">
       <div class="page-header">
-        <div>
-          <h1>Importar Excel</h1>
-          <p>Carregue a planilha ATIVOS_MATRIZ — aba RESUMO_CLIENTE</p>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="hamburger" onclick="openSidebar()">☰</button>
+          <div>
+            <h1>Importar Excel</h1>
+            <p>Carregue a planilha ATIVOS_MATRIZ — aba RESUMO_CLIENTE</p>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema" id="theme-btn-upload">🌙</button>
         </div>
       </div>
       <div class="section-body">
@@ -767,16 +940,24 @@ html, body { height: 100%; font-family: 'Inter', sans-serif; }
     <!-- ── DASHBOARD ──────────────────────────────────── -->
     <section id="page-dashboard" class="page-section">
       <div class="page-header">
-        <div>
-          <h1>Dashboard de Metas</h1>
-          <p id="dash-subtitle">Carregue uma planilha para visualizar os dados</p>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="hamburger" onclick="openSidebar()">☰</button>
+          <div>
+            <h1>Dashboard de Metas</h1>
+            <p id="dash-subtitle">Carregue uma planilha para visualizar os dados</p>
+          </div>
         </div>
         <div class="header-right">
-          <button class="btn-secondary" onclick="navigate('upload')">📂 Atualizar dados</button>
-          <button class="btn-secondary" onclick="exportCSV()">⬇ Exportar CSV</button>
+          <span class="filter-chip" id="active-filter-chip" onclick="clearChartFilter()">
+            <span id="chip-label">—</span>
+            <span class="chip-x">✕</span>
+          </span>
+          <button class="btn-secondary" onclick="navigate('upload')">📂 <span class="hide-sm">Atualizar dados</span></button>
+          <button class="btn-secondary" onclick="exportCSV()">⬇ <span class="hide-sm">Exportar CSV</span></button>
+          <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema" id="theme-btn-dash">🌙</button>
         </div>
       </div>
-      <div id="dash-no-data" class="dash-no-data">
+      <div id="dash-no-data" class="dash-no-data" style="position:relative">
         <div class="no-data-icon">📭</div>
         <h3>Nenhum dado carregado</h3>
         <p>Importe sua planilha ATIVOS_MATRIZ para visualizar<br>o dashboard completo de metas e performance.</p>
@@ -797,16 +978,16 @@ html, body { height: 100%; font-family: 'Inter', sans-serif; }
 
           <!-- Charts row 1 -->
           <div class="charts-grid">
-            <div class="chart-card">
+            <div class="chart-card interactive" id="card-canal">
               <div class="chart-title">Volume por Canal</div>
-              <div class="chart-sub">Realizado acumulado por canal (HL)</div>
+              <div class="chart-sub">Clique em uma barra para filtrar · Realizado acumulado (HL)</div>
               <div class="chart-wrap" style="height:240px">
                 <canvas id="chart-canal"></canvas>
               </div>
             </div>
-            <div class="chart-card">
+            <div class="chart-card interactive" id="card-status">
               <div class="chart-title">Distribuição de Status</div>
-              <div class="chart-sub">Meta Batida · Baixa Performance · Giro Zero</div>
+              <div class="chart-sub">Clique em um segmento para filtrar · Meta Batida · Baixa · Giro Zero</div>
               <div class="chart-wrap" style="height:240px">
                 <canvas id="chart-status"></canvas>
               </div>
@@ -815,16 +996,16 @@ html, body { height: 100%; font-family: 'Inter', sans-serif; }
 
           <!-- Charts row 2 -->
           <div class="charts-grid">
-            <div class="chart-card">
+            <div class="chart-card interactive" id="card-compare">
               <div class="chart-title">Mai vs Jun 2026</div>
-              <div class="chart-sub">Comparativo de volume realizado por canal (HL)</div>
+              <div class="chart-sub">Clique em uma barra para filtrar por canal</div>
               <div class="chart-wrap" style="height:240px">
                 <canvas id="chart-compare"></canvas>
               </div>
             </div>
-            <div class="chart-card">
+            <div class="chart-card interactive" id="card-pct">
               <div class="chart-title">% de Atingimento da Meta</div>
-              <div class="chart-sub">Percentual médio de atingimento por canal</div>
+              <div class="chart-sub">Clique em uma barra para filtrar por canal</div>
               <div class="chart-wrap" style="height:240px">
                 <canvas id="chart-pct"></canvas>
               </div>
@@ -900,6 +1081,20 @@ html, body { height: 100%; font-family: 'Inter', sans-serif; }
 
 <script>
 /* ══════════════════════════════════════════════════════════════
+   THEME
+══════════════════════════════════════════════════════════════ */
+let darkMode = false;
+
+function toggleTheme() {
+  darkMode = !darkMode;
+  document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : '');
+  const icon = darkMode ? '☀️' : '🌙';
+  document.querySelectorAll('.theme-toggle').forEach(b => b.textContent = icon);
+  // rebuild charts with new grid colors
+  if (rawData.length) buildCharts();
+}
+
+/* ══════════════════════════════════════════════════════════════
    AUTH
 ══════════════════════════════════════════════════════════════ */
 const CREDENTIALS = { user: 'admin', pass: 'admin$2542' };
@@ -931,6 +1126,18 @@ document.addEventListener('keydown', e => {
 });
 
 /* ══════════════════════════════════════════════════════════════
+   SIDEBAR MOBILE
+══════════════════════════════════════════════════════════════ */
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebar-overlay').classList.add('visible');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('visible');
+}
+
+/* ══════════════════════════════════════════════════════════════
    NAVIGATION
 ══════════════════════════════════════════════════════════════ */
 function navigate(page) {
@@ -939,6 +1146,7 @@ function navigate(page) {
   document.getElementById('page-' + page).classList.add('active');
   const navEl = document.querySelector(`[data-page="${page}"]`);
   if (navEl) navEl.classList.add('active');
+  closeSidebar();
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1142,6 +1350,63 @@ function deriveStatus(pct, realizado) {
 let activeMonth = 'all';
 const charts = {};
 
+// Chart filter state: { type: 'canal'|'status', value: string } | null
+let chartFilter = null;
+
+function applyChartFilter(type, value, label) {
+  // toggle off if already same filter
+  if (chartFilter?.type === type && chartFilter?.value === value) {
+    clearChartFilter();
+    return;
+  }
+  chartFilter = { type, value };
+
+  // chip
+  document.getElementById('chip-label').textContent = label;
+  document.getElementById('active-filter-chip').classList.add('visible');
+
+  // ring on card
+  document.querySelectorAll('.chart-card').forEach(c => c.classList.remove('filtered'));
+  const cardMap = { canal:'card-canal', status:'card-status', compare:'card-compare', pct:'card-pct' };
+  if (cardMap[type]) document.getElementById(cardMap[type])?.classList.add('filtered');
+
+  // sync table dropdowns
+  if (type === 'canal') {
+    document.getElementById('tbl-canal').value = value;
+    document.getElementById('tbl-status').value = '';
+  } else {
+    document.getElementById('tbl-status').value = value;
+    document.getElementById('tbl-canal').value = '';
+  }
+
+  // propagate filter to KPIs, performers and table
+  refreshDashboard();
+}
+
+function clearChartFilter() {
+  chartFilter = null;
+  document.getElementById('active-filter-chip').classList.remove('visible');
+  document.querySelectorAll('.chart-card').forEach(c => c.classList.remove('filtered'));
+  document.getElementById('tbl-canal').value = '';
+  document.getElementById('tbl-status').value = '';
+  refreshDashboard();
+}
+
+// Returns rawData filtered by the current chartFilter (ignores month — that's handled per-use)
+function getFilteredBase() {
+  if (!chartFilter) return rawData;
+  if (chartFilter.type === 'canal')  return rawData.filter(r => r.canal  === chartFilter.value);
+  if (chartFilter.type === 'status') return rawData.filter(r => r.status === chartFilter.value);
+  return rawData;
+}
+
+// Re-render KPIs + performers using filtered base; table uses its own dropdowns
+function refreshDashboard() {
+  buildKPIs();
+  buildTopPerformers();
+  filterTable();
+}
+
 function setMonth(m, btn) {
   activeMonth = m;
   document.querySelectorAll('.month-tab').forEach(t => t.classList.remove('active'));
@@ -1175,26 +1440,29 @@ function getDataForMonth(data, month) {
 }
 
 function buildKPIs() {
-  const total     = rawData.length;
-  const metaBatida = rawData.filter(r => r.status === 'META BATIDA').length;
-  const giroZero  = rawData.filter(r => r.status === 'GIRO ZERO').length;
-  const totalMeta = rawData.reduce((s,r) => s + r.meta, 0);
-  const totalReal = rawData.reduce((s,r) => s + r.realizado, 0);
-  const pctGeral  = totalMeta > 0 ? (totalReal / totalMeta * 100) : 0;
-  const totalMai  = rawData.reduce((s,r) => s + r.mai, 0);
-  const totalJun  = rawData.reduce((s,r) => s + r.jun, 0);
-  const varMoM    = totalMai > 0 ? ((totalJun - totalMai) / totalMai * 100) : 0;
+  const base       = getFilteredBase();
+  const total      = base.length;
+  const metaBatida = base.filter(r => r.status === 'META BATIDA').length;
+  const giroZero   = base.filter(r => r.status === 'GIRO ZERO').length;
+  const totalMeta  = base.reduce((s,r) => s + r.meta, 0);
+  const totalReal  = base.reduce((s,r) => s + r.realizado, 0);
+  const pctGeral   = totalMeta > 0 ? (totalReal / totalMeta * 100) : 0;
+  const totalMai   = base.reduce((s,r) => s + r.mai, 0);
+  const totalJun   = base.reduce((s,r) => s + r.jun, 0);
+  const varMoM     = totalMai > 0 ? ((totalJun - totalMai) / totalMai * 100) : 0;
+  const isFiltered = !!chartFilter;
+  const filterNote = isFiltered ? `<span style="font-size:10px;opacity:.6">(filtrado)</span>` : '';
 
   document.getElementById('kpi-grid').innerHTML = `
     <div class="kpi-card blue">
-      <div class="kpi-label">Total Clientes</div>
+      <div class="kpi-label">Total Clientes ${filterNote}</div>
       <div class="kpi-value">${total.toLocaleString('pt-BR')}</div>
-      <div class="kpi-sub">estabelecimentos ativos</div>
+      <div class="kpi-sub">${isFiltered ? `de ${rawData.length} total` : 'estabelecimentos ativos'}</div>
     </div>
     <div class="kpi-card green">
       <div class="kpi-label">Meta Batida</div>
       <div class="kpi-value">${metaBatida}</div>
-      <div class="kpi-sub">${((metaBatida/total)*100).toFixed(1)}% do total</div>
+      <div class="kpi-sub">${total > 0 ? ((metaBatida/total)*100).toFixed(1) : '0'}% do grupo</div>
     </div>
     <div class="kpi-card amber">
       <div class="kpi-label">Atingimento Geral</div>
@@ -1211,7 +1479,7 @@ function buildKPIs() {
     <div class="kpi-card red">
       <div class="kpi-label">Giro Zero</div>
       <div class="kpi-value">${giroZero}</div>
-      <div class="kpi-sub">${((giroZero/total)*100).toFixed(1)}% sem volume</div>
+      <div class="kpi-sub">${total > 0 ? ((giroZero/total)*100).toFixed(1) : '0'}% sem volume</div>
     </div>
   `;
 }
@@ -1223,16 +1491,21 @@ function fmtHL(v) {
 
 function buildCharts() {
   const data = getDataForMonth(rawData, activeMonth);
+  const isDark = darkMode;
+  const textColor  = isDark ? '#8892aa' : '#6b7280';
+  const gridColor  = isDark ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.05)';
+  const borderCol  = isDark ? '#111827' : '#ffffff';
+  const CANAL_PALETTE = (n) => Array.from({length:n}, (_,i) => `hsl(${210+i*22},${isDark?60:70}%,${isDark?55:52}%)`);
 
-  // ── Canal bar chart
+  // ── 1. Volume por Canal (horizontal bar) — click filtra por canal
   const canalMap = {};
   data.forEach(r => {
     if (!r.canal) return;
-    if (!canalMap[r.canal]) canalMap[r.canal] = 0;
-    canalMap[r.canal] += r.realizado;
+    canalMap[r.canal] = (canalMap[r.canal] || 0) + r.realizado;
   });
   const canalLabels = Object.keys(canalMap).sort((a,b)=>canalMap[b]-canalMap[a]).slice(0,10);
   const canalVals   = canalLabels.map(c => canalMap[c]);
+  const canalColors = CANAL_PALETTE(canalLabels.length);
 
   destroyChart('chart-canal');
   charts['chart-canal'] = new Chart(document.getElementById('chart-canal'), {
@@ -1242,42 +1515,57 @@ function buildCharts() {
       datasets: [{
         label: 'Volume Realizado (HL)',
         data: canalVals,
-        backgroundColor: canalLabels.map((_,i) => `hsl(${210+i*25},70%,${55+i*2}%)`),
+        backgroundColor: canalColors,
         borderRadius: 6, borderSkipped: false
       }]
     },
-    options: barOpts('HL', true)
+    options: {
+      ...barOpts('HL', true, textColor, gridColor),
+      onClick(e, els) {
+        if (!els.length) return;
+        applyChartFilter('canal', canalLabels[els[0].index], `Canal: ${canalLabels[els[0].index]}`);
+      }
+    }
   });
 
-  // ── Status doughnut
-  const statusCounts = {
-    'META BATIDA': data.filter(r=>r.status==='META BATIDA').length,
-    'BAIXA PERFORMANCE': data.filter(r=>r.status==='BAIXA PERFORMANCE').length,
-    'GIRO ZERO': data.filter(r=>r.status==='GIRO ZERO').length
-  };
+  // ── 2. Status doughnut — click filtra por status
+  const STATUS_LABELS = ['META BATIDA', 'BAIXA PERFORMANCE', 'GIRO ZERO'];
+  const STATUS_COLORS = ['#10b981','#f59e0b','#ef4444'];
+  const statusVals = STATUS_LABELS.map(s => data.filter(r => r.status === s).length);
+
   destroyChart('chart-status');
   charts['chart-status'] = new Chart(document.getElementById('chart-status'), {
     type: 'doughnut',
     data: {
-      labels: Object.keys(statusCounts),
+      labels: STATUS_LABELS,
       datasets: [{
-        data: Object.values(statusCounts),
-        backgroundColor: ['#10b981','#f59e0b','#ef4444'],
-        borderWidth: 3, borderColor: '#fff',
-        hoverOffset: 8
+        data: statusVals,
+        backgroundColor: STATUS_COLORS,
+        borderWidth: 3,
+        borderColor: borderCol,
+        hoverOffset: 10
       }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       cutout: '65%',
       plugins: {
-        legend: { position: 'bottom', labels: { font:{size:11}, padding:12 } },
+        legend: {
+          position: 'bottom',
+          labels: { font:{size:11}, padding:14, color: textColor }
+        },
         tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} clientes` } }
+      },
+      onClick(e, els) {
+        if (!els.length) return;
+        const status = STATUS_LABELS[els[0].index];
+        const labelMap = { 'META BATIDA':'✓ Meta Batida', 'BAIXA PERFORMANCE':'↓ Baixa Performance', 'GIRO ZERO':'✕ Giro Zero' };
+        applyChartFilter('status', status, labelMap[status] || status);
       }
     }
   });
 
-  // ── Mai vs Jun grouped bar
+  // ── 3. Mai vs Jun grouped bar — click filtra por canal
   const canais = [...new Set(rawData.map(r=>r.canal).filter(Boolean))].sort();
   const maiByCanal = canais.map(c => rawData.filter(r=>r.canal===c).reduce((s,r)=>s+r.mai,0));
   const junByCanal = canais.map(c => rawData.filter(r=>r.canal===c).reduce((s,r)=>s+r.jun,0));
@@ -1288,14 +1576,21 @@ function buildCharts() {
     data: {
       labels: canais,
       datasets: [
-        { label: 'Mai 2026', data: maiByCanal, backgroundColor:'rgba(59,130,246,.7)', borderRadius:4, borderSkipped:false },
-        { label: 'Jun 2026', data: junByCanal, backgroundColor:'rgba(16,185,129,.7)', borderRadius:4, borderSkipped:false }
+        { label: 'Mai 2026', data: maiByCanal, backgroundColor: isDark?'rgba(59,130,246,.65)':'rgba(59,130,246,.75)', borderRadius:4, borderSkipped:false },
+        { label: 'Jun 2026', data: junByCanal, backgroundColor: isDark?'rgba(16,185,129,.65)':'rgba(16,185,129,.75)', borderRadius:4, borderSkipped:false }
       ]
     },
-    options: barOpts('HL', false)
+    options: {
+      ...barOpts('HL', false, textColor, gridColor),
+      onClick(e, els) {
+        if (!els.length) return;
+        const canal = canais[els[0].index];
+        applyChartFilter('canal', canal, `Canal: ${canal}`);
+      }
+    }
   });
 
-  // ── % atingimento por canal
+  // ── 4. % atingimento médio por canal (horizontal bar) — click filtra por canal
   const pctMap = {};
   rawData.forEach(r => {
     if (!r.canal || r.meta <= 0) return;
@@ -1318,7 +1613,14 @@ function buildCharts() {
         borderRadius: 6, borderSkipped: false
       }]
     },
-    options: barOpts('%', true)
+    options: {
+      ...barOpts('%', true, textColor, gridColor),
+      onClick(e, els) {
+        if (!els.length) return;
+        const canal = pctLabels[els[0].index];
+        applyChartFilter('canal', canal, `Canal: ${canal}`);
+      }
+    }
   });
 }
 
@@ -1326,27 +1628,27 @@ function destroyChart(id) {
   if (charts[id]) { charts[id].destroy(); delete charts[id]; }
 }
 
-function barOpts(unit, indexAxis) {
+function barOpts(unit, horizontal, textColor, gridColor) {
   return {
     responsive: true, maintainAspectRatio: false,
-    indexAxis: indexAxis ? 'y' : 'x',
+    indexAxis: horizontal ? 'y' : 'x',
     plugins: {
-      legend: { display: !indexAxis },
+      legend: { display: !horizontal, labels: { color: textColor, font:{size:11} } },
       tooltip: { callbacks: { label: ctx => ` ${ctx.formattedValue} ${unit}` } }
     },
     scales: {
-      x: { grid:{color:'rgba(0,0,0,.04)'}, ticks:{font:{size:11}} },
-      y: { grid:{color:'rgba(0,0,0,.04)'}, ticks:{font:{size:11}} }
+      x: { grid:{color: gridColor}, ticks:{font:{size:11}, color: textColor} },
+      y: { grid:{color: gridColor}, ticks:{font:{size:11}, color: textColor} }
     }
   };
 }
 
 function buildTopPerformers() {
-  const sorted = [...rawData].filter(r => r.realizado > 0).sort((a,b)=>b.realizado-a.realizado);
-  const top = sorted.slice(0,10);
+  const base = getFilteredBase();
   const rankClass = i => i===0?'gold':i===1?'silver':i===2?'bronze':'';
 
-  document.getElementById('top-performers').innerHTML = top.map((r,i) => `
+  const top = [...base].filter(r => r.realizado > 0).sort((a,b) => b.realizado - a.realizado).slice(0,10);
+  document.getElementById('top-performers').innerHTML = top.length ? top.map((r,i) => `
     <li class="performer-item">
       <div class="performer-rank ${rankClass(i)}">${i+1}</div>
       <div class="performer-info">
@@ -1354,10 +1656,10 @@ function buildTopPerformers() {
         <div class="performer-canal">${r.canal}</div>
       </div>
       <div class="performer-value">${fmtHL(r.realizado)} HL</div>
-    </li>`).join('');
+    </li>`).join('') : '<li style="padding:20px 0;color:var(--text3);font-size:13px">Nenhum dado para o filtro selecionado</li>';
 
-  const bottom = [...rawData].filter(r=>r.gap>0).sort((a,b)=>b.gap-a.gap).slice(0,10);
-  document.getElementById('bottom-performers').innerHTML = bottom.map((r,i) => `
+  const bottom = [...base].filter(r => r.gap > 0).sort((a,b) => b.gap - a.gap).slice(0,10);
+  document.getElementById('bottom-performers').innerHTML = bottom.length ? bottom.map((r,i) => `
     <li class="performer-item">
       <div class="performer-rank ${rankClass(i)}">${i+1}</div>
       <div class="performer-info">
@@ -1365,7 +1667,7 @@ function buildTopPerformers() {
         <div class="performer-canal">${r.canal}</div>
       </div>
       <div class="performer-value" style="color:#ef4444">-${fmtHL(r.gap)} HL</div>
-    </li>`).join('');
+    </li>`).join('') : '<li style="padding:20px 0;color:var(--text3);font-size:13px">Nenhum dado para o filtro selecionado</li>';
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1388,6 +1690,18 @@ function filterTable() {
   const q      = (document.getElementById('tbl-search').value || '').toLowerCase();
   const canal  = document.getElementById('tbl-canal').value;
   const status = document.getElementById('tbl-status').value;
+
+  // if user manually changed the selects, clear the chart filter highlight
+  if (chartFilter) {
+    const filterMatchesDom =
+      (chartFilter.type === 'canal'  && chartFilter.value === canal) ||
+      (chartFilter.type === 'status' && chartFilter.value === status);
+    if (!filterMatchesDom) {
+      chartFilter = null;
+      document.getElementById('active-filter-chip').classList.remove('visible');
+      document.querySelectorAll('.chart-card').forEach(c => c.classList.remove('filtered'));
+    }
+  }
 
   let data = getDataForMonth(rawData, activeMonth);
 
